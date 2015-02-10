@@ -1,0 +1,137 @@
+buildscript {
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:1.2-SNAPSHOT'
+    }
+}
+
+apply plugin: 'scala'
+apply plugin: 'forge'
+
+version = "0.0.1"
+ext.bdlibver = "1.6.2.41"
+ext.versuffix = "mc1710"
+ext.apiVer = version
+
+if (project.hasProperty('buildnum')) {
+    project.version = project.version + '.' + project.buildnum
+} else {
+    project.version = project.version + '-DEV'
+}
+
+group = "net.bdew"
+archivesBaseName = "miner_ray"
+
+minecraft {
+    version = "1.7.10-10.13.2.1231"
+    replace("BDLIB_VER", project.bdlibver)
+    replace("MINER_RAY_VER", project.version)
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "bdew"
+        url = "http://jenkins.bdew.net/maven"
+    }
+    maven {
+        name = "chickenbones"
+        url = "http://chickenbones.net/maven"
+    }
+    maven {
+        name = "ic2"
+        url = "http://maven.ic2.player.to/"
+    }
+    maven {
+        name "waila"
+        url "http://mobiusstrip.eu/maven"
+    }
+}
+
+dependencies {
+    compile "net.bdew:bdlib:" + bdlibver
+    compile "net.bdew.thirdparty:CoFHLib:1.7.10R3.0.0.8:api"
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+sourceSets {
+    main {
+        scala {
+            srcDir 'src'
+        }
+        resources {
+            srcDir 'resources'
+        }
+        output.resourcesDir = output.classesDir // Hack for IDEA
+    }
+}
+
+processResources {
+    inputs.property "tokens", minecraft.replacements
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        filter(ReplaceTokens, tokens: minecraft.replacements)
+    }
+
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+task sourceJar(type: Jar) {
+}
+
+task deobfJar(type: Jar) {
+    from sourceSets.main.output
+    exclude "**/*.psd"
+}
+
+
+jar {
+    exclude "**/*.psd"
+    appendix = project.versuffix
+}
+
+afterEvaluate { project ->
+    // Fudge the inputs of api/source jars so we get the version after replacements
+    tasks.getByPath(":sourceJar").from(tasks.getByPath(":sourceMainScala").outputs.files)
+}
+
+artifacts {
+    archives sourceJar
+    archives deobfJar
+}
+
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact deobfJar
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "file://var/www/maven"
+        }
+    }
+}

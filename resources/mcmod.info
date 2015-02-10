@@ -1,0 +1,20 @@
+[
+{
+  "modid": "miner_ray",
+  "name": "Miner Ray",
+  "description": "",
+  "version": "@MINER_RAY_VER@",
+  "url": "http://bdew.net/",
+  "updateUrl": "",
+  "authorList": [
+    "bdew"
+  ],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [
+  ],
+  "parent":"",
+  "dependencies": [
+  ]
+}
+]
