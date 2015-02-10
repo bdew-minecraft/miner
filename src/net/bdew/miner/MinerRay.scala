@@ -44,7 +44,9 @@ object MinerRay {
   @EventHandler
   def init(event: FMLInitializationEvent): Unit = {
     EntityRegistry.registerModEntity(classOf[EntityMinerRay], "bdewMinerRay", 1, this, 64, 1, true)
-    RenderingRegistry.registerEntityRenderingHandler(classOf[EntityMinerRay], new RenderMinerRay)
+    if (event.getSide.isClient) {
+      RenderingRegistry.registerEntityRenderingHandler(classOf[EntityMinerRay], new RenderMinerRay)
+    }
   }
 
   @EventHandler
